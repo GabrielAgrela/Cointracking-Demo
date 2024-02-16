@@ -1,5 +1,6 @@
 <?php
 require_once 'FileUtils.php';
+require_once 'APIUtils.php';
 class CoinTrackingDemo
 {
     // json var
@@ -17,15 +18,17 @@ class CoinTrackingDemo
         // group by same utc_time
         $data = FileUtils::groupData($data);
 
+
         // sort chunk for each utc_time
-        foreach ($data as $utcTime => $chunk) {
-            $this->sortChunk($chunk);
+        foreach ($data as $utcTime => $chunk) 
+        {
+            $this->processGroup($chunk);
         }
         echo json_encode($this->json, JSON_PRETTY_PRINT);
     }
 
 
-    public function sortChunk($csvData)
+    public function processGroup($csvData)
     {
         while (count($csvData) > 0)
         {
@@ -77,30 +80,62 @@ class CoinTrackingDemo
     {
         if ($row !== null) 
         {
-            $jsonEntry = 
-            [
+            $jsonEntry = [
                 "time" => strtotime($row[1]),
                 "type" => $type,
             ];
 
-            if ($type === "Other fee") 
+            $retryCount = 0;
+            while ($retryCount < 30) 
             {
-                $jsonEntry["sell_currency"] = $row[4];
-                $jsonEntry["sell"] = floatval($row[5]);
-            } 
-            else 
-            {
-                $jsonEntry["buy_currency"] = $row[4];
-                $jsonEntry["buy"] = floatval($row[5]);
-            }
-            
-            if ($pairRow !== null) 
-            {
-                $jsonEntry["sell_currency"] = $pairRow[4];
-                $jsonEntry["sell"] = floatval($pairRow[5]);
+                if ($type === "Other fee") 
+                {
+                    $jsonEntry["sell_currency"] = $row[4];
+                    $jsonEntry["sell"] = abs(floatval($row[5]));
+                    $coinPrice = APIUtils::fetchCoinPriceInEuro($row[4],  $row[1]);
+                    if (is_float($coinPrice)) {
+                        $jsonEntry["sell_eur"] = $coinPrice * $jsonEntry["sell"];
+                    } else {
+                        $jsonEntry["sell_eur"] = $coinPrice;
+                    }
+                } 
+                else 
+                {
+                    $jsonEntry["buy_currency"] = $row[4];
+                    $jsonEntry["buy"] = abs(floatval($row[5]));
+                    $coinPrice = APIUtils::fetchCoinPriceInEuro($row[4],  $row[1]);
+                    if (is_float($coinPrice)) {
+                        $jsonEntry["buy_eur"] = APIUtils::fetchCoinPriceInEuro($row[4],  $row[1]);
+                    } else {
+                        $jsonEntry["buy_eur"] = $coinPrice;
+                    }
+                }
+                
+                if ($pairRow !== null) 
+                {
+                    $jsonEntry["sell_currency"] = $pairRow[4];
+                    $jsonEntry["sell"] = abs(floatval($pairRow[5]));
+                    $coinPrice = APIUtils::fetchCoinPriceInEuro($pairRow[4],  $pairRow[1]);
+                    if (is_float($coinPrice)) {
+                        $jsonEntry["sell_eur"] = $coinPrice * $jsonEntry["sell"];
+                    } else {
+                        $jsonEntry["sell_eur"] = $coinPrice;
+                    }
+                }
+
+                if ((isset($jsonEntry["sell_eur"]) && $jsonEntry["sell_eur"] === 429) || (isset($jsonEntry["buy_eur"]) && $jsonEntry["buy_eur"] === 429))
+                {
+                    echo "\n Retrying... \n";
+                    sleep(5); // Wait for 1 second before retrying
+                    $retryCount++;
+                    continue;
+                }
+
+                break;
             }
 
             $this->json[] = $jsonEntry;
+            //echo json_encode($jsonEntry, JSON_PRETTY_PRINT) . "\n";
         }
     }
 
