@@ -1,67 +1,118 @@
 <?php
-
+require_once 'FileUtils.php';
 class CoinTrackingDemo
 {
+    // json var
+    private $json = [];
     
     public function run($filePath)
     {
-        echo "File path: " . $filePath . "\n";
-        if (!file_exists($filePath) || !is_readable($filePath)) 
+        FileUtils::checkFile($filePath);
+
+        $csvData = FileUtils::readCSV($filePath);
+
+        // Remove header
+        array_shift($csvData);
+
+        // group by same utc_time
+        $csvData = FileUtils::groupData($csvData);
+
+        // sort chunk for each utc_time
+        foreach ($csvData as $utcTime => $chunk) 
         {
-            echo "Error: File not found or not readable\n";
-            exit(1);
+            $this->sortChunk($chunk);
         }
+        echo json_encode($this->json, JSON_PRETTY_PRINT);
+    }
 
-        $csvFile = fopen('Data/sample.csv', 'r');
-        $csvData = [];
-
-        while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) 
+    public function sortChunk($csvData)
+    {
+        while (count($csvData) > 0)
         {
-            $csvData[] = $row;
-        }
-
-        fclose($csvFile);
-
-        // while csvfile count > 1
-        while (count($csvData) > 1)
-        {
-            echo "*-----------------------------*\n";
-            $smallestSellChangeRow = $this->getSmallestChange($csvData);
-            echo "Row with smallest change: " . json_encode($smallestSellChangeRow, JSON_PRETTY_PRINT) . "\n";
-            $smallestSellChangeRowPair = $this->getSmallestChange($csvData,$smallestSellChangeRow);
-            echo "222Row with smallest change: " . json_encode($smallestSellChangeRowPair, JSON_PRETTY_PRINT) . "\n";
+            $smallestTradeChangeRow = $this->getSmallestChange($csvData);
+            if ($smallestTradeChangeRow === null) 
+            {
+                $smallestTradeChangeRow = $this->getSmallestChange($csvData, null, "Buy");
+                $smallestTradeChangeRowPair = $this->getSmallestChange($csvData,$smallestTradeChangeRow, "Buy");
+            }
+            else
+            {
+                $smallestTradeChangeRowPair = $this->getSmallestChange($csvData, $smallestTradeChangeRow);
+            }
+            
             $smallestFeeChangeRow = $this->getSmallestChange($csvData, null, "Fee");
-            echo "333Row with smallest fee change: " . json_encode($smallestFeeChangeRow, JSON_PRETTY_PRINT) . "\n";
             $smallestReferralChangeRow = null;
+            $smallestDepositChangeRow = null;
+            $smallestMinningChangeRow = null;
 
-            if ($smallestSellChangeRow === null || $smallestSellChangeRowPair === null || $smallestFeeChangeRow === null) 
+            if ($smallestTradeChangeRow === null || $smallestTradeChangeRowPair === null || $smallestFeeChangeRow === null) 
             {
                 $smallestReferralChangeRow = $this->getSmallestChange($csvData, null, "Referral Kickback");
-                echo "444Row with smallest fee change: " . json_encode($smallestReferralChangeRow, JSON_PRETTY_PRINT) . "\n";
+                $this->addToJson($smallestReferralChangeRow, "Reward/Bonus");
+
+                $smallestDepositChangeRow = $this->getSmallestChange($csvData, null, "Deposit");
+                $this->addToJson($smallestDepositChangeRow, "Deposit");
+
+                $smallestMinningChangeRow = $this->getSmallestChange($csvData, null, "Super BNB Mining");
+                $this->addToJson($smallestMinningChangeRow, "Mining");
             }
+            else
+            {
+                $this->addToJson($smallestTradeChangeRow, "Trade", $smallestTradeChangeRowPair);
+                $this->addToJson($smallestFeeChangeRow, "Other fee");
+            }
+
             // Remove rows from csvData
             foreach ($csvData as $key => $row) 
             {
-                if ($row === $smallestSellChangeRow || $row === $smallestSellChangeRowPair || $row === $smallestFeeChangeRow || $row === $smallestReferralChangeRow) 
+                if ($row === $smallestTradeChangeRow || $row === $smallestTradeChangeRowPair || $row === $smallestFeeChangeRow || $row === $smallestReferralChangeRow || $row === $smallestDepositChangeRow || $row === $smallestMinningChangeRow) 
                 {
                     unset($csvData[$key]);
                 }
             }
-            
-            //echo "CSV Data: " . json_encode($csvData, JSON_PRETTY_PRINT) . "\n";
-            
         }
     }
 
-    public function getSmallestChange($csvData, $smallestSellChangeRow = null, $type = "Sell")
+    private function addToJson($row, $type, $pairRow = null)
+    {
+        if ($row !== null) 
+        {
+            $jsonEntry = 
+            [
+                "time" => strtotime($row[1]),
+                "type" => $type,
+            ];
+
+            if ($type === "Other fee") 
+            {
+                $jsonEntry["sell_currency"] = $row[4];
+                $jsonEntry["sell"] = floatval($row[5]);
+            } 
+            else 
+            {
+                $jsonEntry["buy_currency"] = $row[4];
+                $jsonEntry["buy"] = floatval($row[5]);
+            }
+            
+            if ($pairRow !== null) 
+            {
+                $jsonEntry["sell_currency"] = $pairRow[4];
+                $jsonEntry["sell"] = floatval($pairRow[5]);
+            }
+
+            $this->json[] = $jsonEntry;
+        }
+    }
+
+    public function getSmallestChange($csvData, $smallestChangeRow = null, $type = "Sell")
     {
         $smallestChange = PHP_INT_MAX;
-        $smallestSellChangeRowResult = null;
+        $smallestChangeRowResult = null;
         foreach ($csvData as $row) 
         {
             if (isset($row[3]) && $row[3] == $type) 
             {
-                if ($smallestSellChangeRow !== null && $row[4] == $smallestSellChangeRow[4]) 
+                if ($smallestChangeRow !== null && $row[4] == $smallestChangeRow[4]) 
                 {
                     continue;
                 }
@@ -69,11 +120,15 @@ class CoinTrackingDemo
                 if ($change < $smallestChange) 
                 {
                     $smallestChange = $change;
-                    $smallestSellChangeRowResult = $row;
+                    $smallestChangeRowResult = $row;
                 }
             }
         }
-        return $smallestSellChangeRowResult;
+        if ($smallestChangeRowResult !== null) 
+        {
+           // echo "444Row with smallest fee change: " . json_encode($smallestChangeRowResult, JSON_PRETTY_PRINT) . "\n";
+        }
+        return $smallestChangeRowResult;
     }
 }
 
