@@ -4,26 +4,26 @@ class CoinTrackingDemo
 {
     // json var
     private $json = [];
-    
+
     public function run($filePath)
     {
         FileUtils::checkFile($filePath);
 
-        $csvData = FileUtils::readCSV($filePath);
+        $data = FileUtils::readFile($filePath);
 
         // Remove header
-        array_shift($csvData);
+        array_shift($data);
 
         // group by same utc_time
-        $csvData = FileUtils::groupData($csvData);
+        $data = FileUtils::groupData($data);
 
         // sort chunk for each utc_time
-        foreach ($csvData as $utcTime => $chunk) 
-        {
+        foreach ($data as $utcTime => $chunk) {
             $this->sortChunk($chunk);
         }
         echo json_encode($this->json, JSON_PRETTY_PRINT);
     }
+
 
     public function sortChunk($csvData)
     {

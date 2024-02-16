@@ -1,24 +1,25 @@
 <?php
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
 class FileUtils
 {
     public static function groupData($csvData)
     {
         $groupedData = [];
-        foreach ($csvData as $row) 
-        {
+        foreach ($csvData as $row) {
             $utcTime = $row[1];
-            if (!isset($groupedData[$utcTime])) 
-            {
+            if (!isset($groupedData[$utcTime])) {
                 $groupedData[$utcTime] = [];
             }
             $groupedData[$utcTime][] = $row;
         }
-        $csvData = $groupedData;
-        return $csvData;
+        return $groupedData;
     }
 
-    public static function checkFile($filePath) 
+    public static function checkFile($filePath)
     {
         if (!file_exists($filePath) || !is_readable($filePath)) {
             echo "Error: File not found or not readable\n";
@@ -26,41 +27,28 @@ class FileUtils
         }
     }
 
-    public static function readCSV($filePath) 
+    public static function readFile($filePath)
     {
-        $csvFile = fopen($filePath, 'r');
-        $csvData = [];
+        // Determine file type by extension
+        $fileExtension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
-        while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) {
-            $csvData[] = $row;
-        }
-        fclose($csvFile);
-
-        return $csvData;
-    }
-
-    public static function readXLS($filePath) 
-    {
-        require 'vendor/autoload.php';
-
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
-        $worksheet = $spreadsheet->getActiveSheet();
-        $xlsData = [];
-
-        foreach ($worksheet->getRowIterator() as $row) {
-            $cellIterator = $row->getCellIterator();
-            $cellIterator->setIterateOnlyExistingCells(FALSE); // This loops through all cells,
-                                                               // even if a cell value is not set.
-                                                               // By default, only cells that have a value set are iterated.
-            $cells = [];
-            foreach ($cellIterator as $cell) {
-                $cells[] = $cell->getValue();
+        if ($fileExtension == 'csv') {
+            // Read CSV file
+            $csvFile = fopen($filePath, 'r');
+            $data = [];
+            while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) {
+                $data[] = $row;
             }
-            $xlsData[] = $cells;
+            fclose($csvFile);
+            return $data;
+        } elseif (in_array($fileExtension, ['xls', 'xlsx'])) {
+            // Read Excel file
+            $spreadsheet = IOFactory::load($filePath);
+            $data = $spreadsheet->getActiveSheet()->toArray();
+            return $data;
+        } else {
+            echo "Error: Unsupported file type\n";
+            exit(1);
         }
-
-        return $xlsData;
     }
-    
 }
-?>
