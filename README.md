@@ -43,7 +43,11 @@
 
 ## Libraries
 
--phpunit/phpunit
--vlucas/phpdotenv
--phpoffice/phpspreadsheet
+- phpunit/phpunit
+- vlucas/phpdotenv
+- phpoffice/phpspreadsheet
 
+## How to run
+```php
+php CoinTrackingDemo.php Data\sample.csv
+```
