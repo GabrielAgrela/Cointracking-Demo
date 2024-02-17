@@ -2,7 +2,7 @@
 
 ## How to run
 
-- Update the .env file with the API key from CoinGecko
+- Update the .env file with the API key from CoinGecko (optional, but it's too slow without it)
 
 ```php
 php CoinTrackingDemo.php Data\sample.csv
