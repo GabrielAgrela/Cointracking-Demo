@@ -1,24 +1,24 @@
-# Specific Requirements:
+# Specific Requirements:A- 
 
-Read data from a sheet (csv or xls) to an array;
-Group data by date;
-Create transactions depending on the rules:
-    Transactions with the same timestamp are sorted crescently by the "change" value:
-        A buy or a sell has a pair in the same timestamp ("transforms" into a trade);
-        A pair is the smallest "change" value in the same timestamp with the same "operation" and different "coin";
-        A trade transaction is followed by a fee transaction (if any);
-        Followed by reward transaction (if any);
-        Followed by Deposit transaction (if any);
-        Followed by Mining transaction (if any);
-Each sell or buy key must be followed by a x_eur key with the value of the total amount of the transaction in EUR if the currency is different from EUR:
-    Fetch coin id from gecko API based on the coin name;
-    Fetch the price of the coin in EUR from gecko API at the time of the transaction;
-Needs to run from the command line;
+- Read data from a sheet (csv or xls) to an array;
+- Group data by date;
+- Create transactions depending on the rules:
+    - Transactions with the same timestamp are sorted crescently by the "change" value:
+        - A buy or a sell has a pair in the same timestamp ("transforms" into a trade);
+        - A pair is the smallest "change" value in the same timestamp with the same "operation" and different "coin";
+        - A trade transaction is followed by a fee transaction (if any);
+        - Followed by reward transaction (if any);
+        - Followed by Deposit transaction (if any);
+        - Followed by Mining transaction (if any);
+- Each sell or buy key must be followed by a x_eur key with the value of the total amount of the transaction in EUR if the currency is different from EUR:
+    - Fetch coin id from gecko API based on the coin name;
+    - Fetch the price of the coin in EUR from gecko API at the time of the transaction;
+- Needs to run from the command line;
 
 # Assumptions:
 
-The same trade transaction cannot have transactions in different timestamps;
-A group does not have trades with more than 2 different coins;
+- The same trade transaction cannot have transactions in different timestamps;
+- A group does not have trades with more than 2 different coins;
 
 # Thoughts
 
