@@ -30,8 +30,12 @@ Error handling works for the most part, but it could be improved:
     There are uncommon scenarios where, when not using an API key, the request doesn't seem to return a json object;
 
 # Diagrams
+## High level view
 ![](Documentation/CointrackingMain.drawio.png)
+## Transactions Group Processing Algorithm
 ![](Documentation/CointrackingProcessGroup.drawio.png)
+## Formating and Preparing each transaction from the group
 ![](Documentation/CointrackingTransaction.drawio.png)
+## API Request and Response from transactions
 ![](Documentation/CointrackingAPI.drawio.png)
 
