@@ -1,4 +1,16 @@
 # Test Task
+
+## How to run
+
+- Update the .env file with the API key from CoinGecko
+
+```php
+php CoinTrackingDemo.php Data\sample.csv
+```
+```php
+php CoinTrackingDemo.php Data\sample.xls
+```
+
 ## Specific Requirements:
 
 - Read data from a sheet (csv or xls) to an array;
@@ -47,7 +59,4 @@
 - vlucas/phpdotenv
 - phpoffice/phpspreadsheet
 
-## How to run
-```php
-php CoinTrackingDemo.php Data\sample.csv
-```
+
