@@ -2,88 +2,88 @@
 
 class TransactionFamily
 {
-    private $TradeChangeRow;
-    private $TradeChangeRowPair;
-    private $FeeChangeRow;
-    private $ReferralChangeRow;
-    private $DepositChangeRow;
-    private $MinningChangeRow;
+    private $TradeTransaction;
+    private $TradeTransactionPair;
+    private $FeeTransaction;
+    private $ReferralTransaction;
+    private $DepositTransaction;
+    private $MinningTransaction;
 
-    public function __construct($TradeChangeRow = null, $TradeChangeRowPair = null, $FeeChangeRow = null, $ReferralChangeRow = null, $DepositChangeRow = null, $MinningChangeRow = null)
+    public function __construct($TradeTransaction = null, $TradeTransactionPair = null, $FeeTransaction = null, $ReferralTransaction = null, $DepositTransaction = null, $MinningTransaction = null)
     {
-        $this->TradeChangeRow = $TradeChangeRow;
-        $this->TradeChangeRowPair = $TradeChangeRowPair;
-        $this->FeeChangeRow = $FeeChangeRow;
-        $this->ReferralChangeRow = $ReferralChangeRow;
-        $this->DepositChangeRow = $DepositChangeRow;
-        $this->MinningChangeRow = $MinningChangeRow;
+        $this->TradeTransaction = $TradeTransaction;
+        $this->TradeTransactionPair = $TradeTransactionPair;
+        $this->FeeTransaction = $FeeTransaction;
+        $this->ReferralTransaction = $ReferralTransaction;
+        $this->DepositTransaction = $DepositTransaction;
+        $this->MinningTransaction = $MinningTransaction;
     }
 
     // getters and setters
-    public function getTradeChangeRow()
+    public function getTradeTransaction()
     {
-        return $this->TradeChangeRow;
+        return $this->TradeTransaction;
     }
 
-    public function setTradeChangeRow($TradeChangeRow)
+    public function setTradeTransaction($TradeTransaction)
     {
-        $this->TradeChangeRow = $TradeChangeRow;
+        $this->TradeTransaction = $TradeTransaction;
     }
 
-    public function getTradeChangeRowPair()
+    public function getTradeTransactionPair()
     {
-        return $this->TradeChangeRowPair;
+        return $this->TradeTransactionPair;
     }
 
-    public function setTradeChangeRowPair($TradeChangeRowPair)
+    public function setTradeTransactionPair($TradeTransactionPair)
     {
-        $this->TradeChangeRowPair = $TradeChangeRowPair;
+        $this->TradeTransactionPair = $TradeTransactionPair;
     }
 
-    public function getFeeChangeRow()
+    public function getFeeTransaction()
     {
-        return $this->FeeChangeRow;
+        return $this->FeeTransaction;
     }
 
-    public function setFeeChangeRow($FeeChangeRow)
+    public function setFeeTransaction($FeeTransaction)
     {
-        $this->FeeChangeRow = $FeeChangeRow;
+        $this->FeeTransaction = $FeeTransaction;
     }
 
-    public function getReferralChangeRow()
+    public function getReferralTransaction()
     {
-        return $this->ReferralChangeRow;
+        return $this->ReferralTransaction;
     }
 
-    public function setReferralChangeRow($ReferralChangeRow)
+    public function setReferralTransaction($ReferralTransaction)
     {
-        $this->ReferralChangeRow = $ReferralChangeRow;
+        $this->ReferralTransaction = $ReferralTransaction;
     }
 
-    public function getDepositChangeRow()
+    public function getDepositTransaction()
     {
-        return $this->DepositChangeRow;
+        return $this->DepositTransaction;
     }
 
-    public function setDepositChangeRow($DepositChangeRow)
+    public function setDepositTransaction($DepositTransaction)
     {
-        $this->DepositChangeRow = $DepositChangeRow;
+        $this->DepositTransaction = $DepositTransaction;
     }
 
-    public function getMinningChangeRow()
+    public function getMinningTransaction()
     {
-        return $this->MinningChangeRow;
+        return $this->MinningTransaction;
     }
 
-    public function setMinningChangeRow($MinningChangeRow)
+    public function setMinningTransaction($MinningTransaction)
     {
-        $this->MinningChangeRow = $MinningChangeRow;
+        $this->MinningTransaction = $MinningTransaction;
     }
 
     // check if the transaction is a trade transaction
     public function isTransactionTrade()
     {
-        return $this->TradeChangeRow !== null && $this->TradeChangeRowPair !== null && $this->FeeChangeRow !== null;
+        return $this->TradeTransaction !== null && $this->TradeTransactionPair !== null && $this->FeeTransaction !== null;
     }
 
     // return not null rows
@@ -91,12 +91,12 @@ class TransactionFamily
     {
         $rows = 
         [
-            $this->TradeChangeRow !== null ? $this->TradeChangeRow : null,
-            $this->TradeChangeRowPair !== null ? $this->TradeChangeRowPair : null,
-            $this->FeeChangeRow !== null ? $this->FeeChangeRow : null,
-            $this->ReferralChangeRow !== null ? $this->ReferralChangeRow : null,
-            $this->DepositChangeRow !== null ? $this->DepositChangeRow : null,
-            $this->MinningChangeRow !== null ? $this->MinningChangeRow : null,
+            $this->TradeTransaction !== null ? $this->TradeTransaction : null,
+            $this->TradeTransactionPair !== null ? $this->TradeTransactionPair : null,
+            $this->FeeTransaction !== null ? $this->FeeTransaction : null,
+            $this->ReferralTransaction !== null ? $this->ReferralTransaction : null,
+            $this->DepositTransaction !== null ? $this->DepositTransaction : null,
+            $this->MinningTransaction !== null ? $this->MinningTransaction : null,
         ];
 
         return array_filter($rows, function ($row) 
