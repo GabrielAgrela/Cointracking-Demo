@@ -6,10 +6,10 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 class FileUtils
 {
-    public static function groupData($csvData)
+    public static function groupData($sheetData)
     {
         $groupedData = [];
-        foreach ($csvData as $row) {
+        foreach ($sheetData as $row) {
             $utcTime = $row[1];
             if (!isset($groupedData[$utcTime])) {
                 $groupedData[$utcTime] = [];
@@ -32,21 +32,27 @@ class FileUtils
         // Determine file type by extension
         $fileExtension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
-        if ($fileExtension == 'csv') {
+        if ($fileExtension == 'csv') 
+        {
             // Read CSV file
             $csvFile = fopen($filePath, 'r');
             $data = [];
-            while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) {
+            while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) 
+            {
                 $data[] = $row;
             }
             fclose($csvFile);
             return $data;
-        } elseif (in_array($fileExtension, ['xls', 'xlsx'])) {
+        } 
+        elseif (in_array($fileExtension, ['xls', 'xlsx'])) 
+        {
             // Read Excel file
             $spreadsheet = IOFactory::load($filePath);
             $data = $spreadsheet->getActiveSheet()->toArray();
             return $data;
-        } else {
+        } 
+        else 
+        {
             echo "Error: Unsupported file type\n";
             exit(1);
         }
