@@ -38,7 +38,10 @@ php CoinTrackingDemo.php Data\sample.xls
 - May be worth considering refactoring the processGroup() algorithm:
     - It is a bit hacky;
     - The implementation of a Builder pattern for the creation of a transactionFamiliy may be a good idea for this purpose;
-- May be worth consi
+- May be worth considering implementing abstraction for the CoinGecko API:
+    - It would make it easier to change the API in the future;
+- Transactions are stored as indexed arrays, but it may be worth considering implementing them as objects:
+    - Transaction group would have a list of transactions objects instead of having an indexed array of each type of transaction (now that I wrote this down, it seems like the best approach);
 - More samples would be nice to have a better scope for testing and implementing unit tests;
 - Error handling works for the most part, but it could be improved:
     - There are uncommon scenarios where, when not using an API key, the request doesn't seem to return a json object;
