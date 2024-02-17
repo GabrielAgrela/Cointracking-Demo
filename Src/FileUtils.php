@@ -6,6 +6,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 class FileUtils
 {
+    // return group data by utc_time
     public static function groupData($sheetData)
     {
         $groupedData = [];
@@ -19,6 +20,7 @@ class FileUtils
         return $groupedData;
     }
 
+    // check if file exists and is readable
     public static function checkFile($filePath)
     {
         if (!file_exists($filePath) || !is_readable($filePath)) {
@@ -27,14 +29,15 @@ class FileUtils
         }
     }
 
+    // read file and return data depending on the file type
     public static function readFile($filePath)
     {
         // Determine file type by extension
         $fileExtension = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
 
+        // Read CSV file
         if ($fileExtension == 'csv') 
         {
-            // Read CSV file
             $csvFile = fopen($filePath, 'r');
             $data = [];
             while (($row = fgetcsv($csvFile, 1000, ",")) !== FALSE) 
@@ -44,9 +47,9 @@ class FileUtils
             fclose($csvFile);
             return $data;
         } 
+        // Read Excel file
         elseif (in_array($fileExtension, ['xls', 'xlsx'])) 
         {
-            // Read Excel file
             $spreadsheet = IOFactory::load($filePath);
             $data = $spreadsheet->getActiveSheet()->toArray();
             return $data;

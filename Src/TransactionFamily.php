@@ -1,6 +1,6 @@
 <?php
 
-class Transaction
+class TransactionFamily
 {
     private $TradeChangeRow;
     private $TradeChangeRowPair;
@@ -19,6 +19,7 @@ class Transaction
         $this->MinningChangeRow = $MinningChangeRow;
     }
 
+    // getters and setters
     public function getTradeChangeRow()
     {
         return $this->TradeChangeRow;
@@ -79,6 +80,7 @@ class Transaction
         $this->MinningChangeRow = $MinningChangeRow;
     }
 
+    // check if the transaction is a trade transaction
     public function isTransactionTrade()
     {
         return $this->TradeChangeRow !== null && $this->TradeChangeRowPair !== null && $this->FeeChangeRow !== null;
@@ -103,7 +105,8 @@ class Transaction
         });
     }
 
-    public function getTransaction($row, $type, $pairRow = null)
+    // return transaction by constructing a json entry from the rows depending on the type of transaction
+    public function getTransactionByType($row, $type, $pairRow = null)
     {
         if ($row === null)
             return null;
@@ -119,20 +122,24 @@ class Transaction
         $pairRow !== null ? $this->setCurrencyAmountAndEur($jsonEntry, $pairRow, 'sell', true) : null;
 
         $this->formatValue($jsonEntry);
+        echo "One transaction processed\n";
         return $jsonEntry;
     }
 
+    // helper function to set the currency, amount and eur values in the json entry
     private function setCurrencyAmountAndEur(&$jsonEntry, $rowData, $operationType, $override = false)
     {
         $currencyKey = $operationType . "_currency";
         $amountKey = $operationType;
         $eurKey = $operationType . "_eur";
 
-        // If override is true, it will always set the values, otherwise, it sets them based on operationType
+        // if the currency is not set or if the override flag is set then set the currency, amount and eur values
         if ($override || !isset($jsonEntry[$currencyKey])) 
         {
             $jsonEntry[$currencyKey] = $rowData[4];
             $jsonEntry[$amountKey] = abs(floatval($rowData[5]));
+
+            // if the currency is not EUR then fetch the coin price in EUR
             if ($rowData[4] !== "EUR")
             {
                 $coinPrice = APIUtils::fetchCoinPriceInEuro($rowData[4], $rowData[1]);
@@ -142,7 +149,7 @@ class Transaction
         }
     }
 
-
+    // helper function to format the values in the json entry
     public function formatValue(&$jsonEntry)
     {
         isset($jsonEntry["sell_eur"]) && is_float($jsonEntry["sell_eur"]) ? $jsonEntry["sell_eur"] = (float)number_format($jsonEntry["sell_eur"], 8, '.', '') : null;
