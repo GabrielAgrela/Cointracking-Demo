@@ -1,4 +1,4 @@
-# Specific Requirements:A- 
+# Specific Requirements:
 
 - Read data from a sheet (csv or xls) to an array;
 - Group data by date;
@@ -38,4 +38,10 @@
 ![](Documentation/CointrackingTransaction.drawio.png)
 ## API Request and Response from transactions
 ![](Documentation/CointrackingAPI.drawio.png)
+
+# Libraries
+
+-phpunit/phpunit
+-vlucas/phpdotenv
+-phpoffice/phpspreadsheet
 
