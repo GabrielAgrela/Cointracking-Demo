@@ -38,6 +38,7 @@ class APIUtils
 
     }
 
+    // fetch the coin id from the coin name
     public static function fetchCoinIDCurl($coin)
     {
         if (isset(APIUtils::$coinMap[$coin]))
@@ -46,26 +47,34 @@ class APIUtils
         $url = "https://api.coingecko.com/api/v3/search?query=$coin" . APIUtils::getApiKey();
         $data = APIUtils::makeCurlRequest($url);
 
-        if (isset($data['coins']) && count($data['coins']) > 0) {
+        if (isset($data['coins']) && count($data['coins']) > 0) 
+        {
             APIUtils::$coinMap[$coin] = $data['coins'][0]['id'];
             return $data['coins'][0]['id'];
-        } else {
+        } 
+        else 
+        {
             return APIUtils::handleError($data, $coin, 'fetchCoinIDCurl');
         }
     }
 
+    // fetch the coin price in euro at a specific date 
     public static function fetchCoinPriceInEuroCurl($coin, $date)
     {
         $url = "https://api.coingecko.com/api/v3/coins/$coin/history?date=$date&localization=false" . APIUtils::getApiKey();
         $data = APIUtils::makeCurlRequest($url);
 
-        if (isset($data['market_data']['current_price']['eur'])) {
+        if (isset($data['market_data']['current_price']['eur'])) 
+        {
             return $data['market_data']['current_price']['eur'];
-        } else {
+        } 
+        else 
+        {
             return APIUtils::handleError($data, 'fetchCoinPriceInEuroCurl', $coin, $date);
         }
     }
 
+    // make a curl request to the given url, used for all the API requests
     public static function makeCurlRequest($url)
     {
         $curl = curl_init($url);
@@ -77,6 +86,7 @@ class APIUtils
         return json_decode($response, true);
     }
 
+    // handle the error from the API request, if the error is a 429 (API limit reached) we retry the function after 10s
     public static function handleError($data, $retryFunction, ...$args)
     {
         if (isset($data['status']['error_code'])) 
@@ -103,9 +113,5 @@ class APIUtils
     {
         return date('d-m-Y', strtotime($date));
     }
-    
-
-    
-
     
 }

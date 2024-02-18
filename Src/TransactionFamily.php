@@ -2,8 +2,10 @@
 
 class TransactionFamily
 {
+    // transactions from the same sheet's group 
     private $transactions = [];
 
+    // setter that translates type and amount of the transaction
     public function setTransaction($transaction)
     {
         if ($transaction === null)
@@ -30,6 +32,7 @@ class TransactionFamily
         $this->transactions[] = $transaction;
     }
 
+    // getter that returns a transaction or an array of transactions of a specific type
     public function getTransaction($type)
     {
         $transactions = [];
@@ -44,16 +47,15 @@ class TransactionFamily
         return count($transactions) === 0 ? null : (count($transactions) === 1 ? $transactions[0] : $transactions);
     }
 
+    // getter that returns all transactions
     public function getAllTransactions()
     {
         return $this->transactions;
     }
 
-
     // check if the transaction is a trade transaction
     public function isTransactionTrade()
     {
-        // return true if there are 3 transactions, else false
         return count($this->transactions) === 3;
     }
 
@@ -69,8 +71,10 @@ class TransactionFamily
             "type" => $this->transactions[0][3],
         ];
 
+        // the first transaction of a family will always follow this pattern, and is then removed from this family
         $this->transactions[0][3] === "Other fee" ? $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'sell') : $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'buy');
 
+        // if there is still 2 other transactions, we can assume that it is a trade transaction and we need to format the json entry accordingly
         count($this->transactions) === 2 ? $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'sell', true) : null;
 
         $this->formatValue($jsonEntry);

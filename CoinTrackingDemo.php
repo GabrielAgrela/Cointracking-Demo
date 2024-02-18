@@ -35,7 +35,10 @@ class CoinTrackingDemo
         // when looking for a transaction, priority given to smallest "change" per type of transaction
         while (count($sheetData) > 0)
         {
+            // instantiate a new transaction family, this will hold all the transactions that are related to each other
             $transactionFamily = new TransactionFamily();
+
+            // priority is done so crescentely by "change" value, and we start by looking for a trade transaction (sell/buy pair and their fee)
             $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Sell"));
             if ($transactionFamily->getTransaction("Trade") === null) 
             {
@@ -48,16 +51,20 @@ class CoinTrackingDemo
             }
             $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Fee"));
 
+            // if the transaction family is not a trade transaction, we look for the other types of transactions
             if (!$transactionFamily->isTransactionTrade()) 
             {
                 $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Referral Kickback"));
                 $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Deposit"));
                 $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Super BNB Mining"));
             }
+
+            // after running the algorithm, we append the transaction family to the json
             $this->appendToJSON($transactionFamily);
         }
     }
 
+    // append the transaction family to the json
     public function appendToJSON($transactionFamily)
     { 
         while (count($transactionFamily->getAllTransactions()) > 0) 
@@ -69,20 +76,6 @@ class CoinTrackingDemo
             }
         }
         
-    }
-
-    public function removeRows(&$sheetData, $currTransactionFamiliy)
-    {
-        foreach ($sheetData as $key => $row) 
-        {
-            foreach ($currTransactionFamiliy->getAllTransactions() as $rowToRemove) 
-            {
-                if ($row === $rowToRemove) 
-                {
-                    unset($sheetData[$key]);
-                }
-            }
-        } 
     }
 
     // get the smallest row from a group given a type of transaction and a row to ignore (in case its the pair of a trade transaction)
