@@ -2,127 +2,81 @@
 
 class TransactionFamily
 {
-    private $TradeTransaction;
-    private $TradeTransactionPair;
-    private $FeeTransaction;
-    private $ReferralTransaction;
-    private $DepositTransaction;
-    private $MinningTransaction;
+    private $transactions = [];
 
-    public function __construct($TradeTransaction = null, $TradeTransactionPair = null, $FeeTransaction = null, $ReferralTransaction = null, $DepositTransaction = null, $MinningTransaction = null)
+    public function setTransaction($transaction)
     {
-        $this->TradeTransaction = $TradeTransaction;
-        $this->TradeTransactionPair = $TradeTransactionPair;
-        $this->FeeTransaction = $FeeTransaction;
-        $this->ReferralTransaction = $ReferralTransaction;
-        $this->DepositTransaction = $DepositTransaction;
-        $this->MinningTransaction = $MinningTransaction;
+        if ($transaction === null)
+            return;
+        switch ($transaction[3]) 
+        {
+            case "Sell":
+                $transaction[3] = "Trade";
+                break;
+            case "Buy":
+                $transaction[3] = "Trade";
+                break;
+            case "Fee":
+                $transaction[3] = "Other fee";
+                break;
+            case "Referral Kickback":
+                $transaction[3] = "Reward/Bonus";
+                break;
+            case "Super BNB Mining":
+                $transaction[3] = "Mining";
+                break;
+        }
+        $transaction[5] = abs($transaction[5]);
+        $this->transactions[] = $transaction;
     }
 
-    // getters and setters
-    public function getTradeTransaction()
+    public function getTransaction($type)
     {
-        return $this->TradeTransaction;
+        $transactions = [];
+        foreach ($this->transactions as $transaction) 
+        {
+            if ($transaction[3] === $type) 
+            {
+                $transactions[] = $transaction;
+            }
+        }
+        // return null if no transaction of that type is found return array if multiple transactions are found else return the transaction
+        return count($transactions) === 0 ? null : (count($transactions) === 1 ? $transactions[0] : $transactions);
     }
 
-    public function setTradeTransaction($TradeTransaction)
+    public function getAllTransactions()
     {
-        $this->TradeTransaction = $TradeTransaction;
+        return $this->transactions;
     }
 
-    public function getTradeTransactionPair()
-    {
-        return $this->TradeTransactionPair;
-    }
-
-    public function setTradeTransactionPair($TradeTransactionPair)
-    {
-        $this->TradeTransactionPair = $TradeTransactionPair;
-    }
-
-    public function getFeeTransaction()
-    {
-        return $this->FeeTransaction;
-    }
-
-    public function setFeeTransaction($FeeTransaction)
-    {
-        $this->FeeTransaction = $FeeTransaction;
-    }
-
-    public function getReferralTransaction()
-    {
-        return $this->ReferralTransaction;
-    }
-
-    public function setReferralTransaction($ReferralTransaction)
-    {
-        $this->ReferralTransaction = $ReferralTransaction;
-    }
-
-    public function getDepositTransaction()
-    {
-        return $this->DepositTransaction;
-    }
-
-    public function setDepositTransaction($DepositTransaction)
-    {
-        $this->DepositTransaction = $DepositTransaction;
-    }
-
-    public function getMinningTransaction()
-    {
-        return $this->MinningTransaction;
-    }
-
-    public function setMinningTransaction($MinningTransaction)
-    {
-        $this->MinningTransaction = $MinningTransaction;
-    }
 
     // check if the transaction is a trade transaction
     public function isTransactionTrade()
     {
-        return $this->TradeTransaction !== null && $this->TradeTransactionPair !== null && $this->FeeTransaction !== null;
-    }
-
-    // return not null rows
-    public function getRows()
-    {
-        $rows = 
-        [
-            $this->TradeTransaction !== null ? $this->TradeTransaction : null,
-            $this->TradeTransactionPair !== null ? $this->TradeTransactionPair : null,
-            $this->FeeTransaction !== null ? $this->FeeTransaction : null,
-            $this->ReferralTransaction !== null ? $this->ReferralTransaction : null,
-            $this->DepositTransaction !== null ? $this->DepositTransaction : null,
-            $this->MinningTransaction !== null ? $this->MinningTransaction : null,
-        ];
-
-        return array_filter($rows, function ($row) 
-        {
-            return $row !== null;
-        });
+        // return true if there are 3 transactions, else false
+        return count($this->transactions) === 3;
     }
 
     // return transaction by constructing a json entry from the rows depending on the type of transaction
-    public function getTransactionByType($row, $type, $pairRow = null)
+    public function buildTransactionJson()
     {
-        if ($row === null)
+        if (count($this->transactions) === 0)
             return null;
 
         $jsonEntry = 
         [
-            "time" => strtotime($row[1]),
-            "type" => $type,
+            "time" => strtotime($this->transactions[0][1]),
+            "type" => $this->transactions[0][3],
         ];
 
-        $type === "Other fee" ? $this->setCurrencyAmountAndEur($jsonEntry, $row, 'sell') : $this->setCurrencyAmountAndEur($jsonEntry, $row, 'buy');
+        $this->transactions[0][3] === "Other fee" ? $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'sell') : $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'buy');
 
-        $pairRow !== null ? $this->setCurrencyAmountAndEur($jsonEntry, $pairRow, 'sell', true) : null;
+        count($this->transactions) === 2 ? $this->setCurrencyAmountAndEur($jsonEntry, $this->transactions[0], 'sell', true) : null;
 
         $this->formatValue($jsonEntry);
-        echo "One transaction processed\n";
+        
+        echo "\nTransaction Processed";
+        // remove the processed transactions from the group
         return $jsonEntry;
     }
 
@@ -147,6 +101,9 @@ class TransactionFamily
             }
             
         }
+        
+        // remove transaction[0]
+        array_shift($this->transactions);
     }
 
     // helper function to format the values in the json entry

@@ -35,57 +35,47 @@ class CoinTrackingDemo
         // when looking for a transaction, priority given to smallest "change" per type of transaction
         while (count($sheetData) > 0)
         {
-            // create a new transaction group looking for a trade transaction (figure out if its a buy or sell transaction) then also get its pair
-            $currTransactionFamiliy = new TransactionFamily($this->getLowestTransactionInGroup($sheetData));
-            if ($currTransactionFamiliy->getTradeTransaction() === null) 
+            $transactionFamily = new TransactionFamily();
+            $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Sell"));
+            if ($transactionFamily->getTransaction("Trade") === null) 
             {
-                $currTransactionFamiliy->setTradeTransaction($this->getLowestTransactionInGroup($sheetData, null, "Buy"));
-                $currTransactionFamiliy->setTradeTransactionPair($this->getLowestTransactionInGroup($sheetData, $currTransactionFamiliy->getTradeTransaction(), "Buy"));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Buy"));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, $transactionFamily->getTransaction("Trade"), "Buy"));
             }
             else
             {
-                $currTransactionFamiliy->setTradeTransactionPair($this->getLowestTransactionInGroup($sheetData, $currTransactionFamiliy->getTradeTransaction()));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, $transactionFamily->getTransaction("Trade"), "Sell"));
             }
-            // trade transactions also have a fee transaction
-            $currTransactionFamiliy->setFeeTransaction($this->getLowestTransactionInGroup($sheetData, null, "Fee"));
+            $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Fee"));
 
-            // if this transaction is not a trade transaction then it is a deposit, referral or mining transaction
-            // and then append the "processed" transaction from that group to the json var
-            if (!$currTransactionFamiliy->isTransactionTrade()) 
+            if (!$transactionFamily->isTransactionTrade()) 
             {
-                $currTransactionFamiliy->setReferralTransaction($this->getLowestTransactionInGroup($sheetData, null, "Referral Kickback"));
-                $this->appendToJSON($currTransactionFamiliy->getTransactionByType($currTransactionFamiliy->getReferralTransaction(), "Reward/Bonus"));
-
-                $currTransactionFamiliy->setDepositTransaction($this->getLowestTransactionInGroup($sheetData, null, "Deposit"));
-                $this->appendToJSON($currTransactionFamiliy->getTransactionByType($currTransactionFamiliy->getDepositTransaction(), "Deposit"));
-
-                $currTransactionFamiliy->setMinningTransaction($this->getLowestTransactionInGroup($sheetData, null, "Super BNB Mining"));
-                $this->appendToJSON($currTransactionFamiliy->getTransactionByType($currTransactionFamiliy->getMinningTransaction(), "Mining"));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Referral Kickback"));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Deposit"));
+                $transactionFamily->setTransaction($this->getLowestTransactionInGroup($sheetData, null, "Super BNB Mining"));
             }
-            else
-            {
-                $this->appendToJSON($currTransactionFamiliy->getTransactionByType($currTransactionFamiliy->getTradeTransaction(), "Trade", $currTransactionFamiliy->getTradeTransactionPair()));
-                $this->appendToJSON($currTransactionFamiliy->getTransactionByType($currTransactionFamiliy->getFeeTransaction(), "Other fee"));
-            }
-
-            // remove the processed transactions from the group
-            $this->removeRows($sheetData, $currTransactionFamiliy);        
+            $this->appendToJSON($transactionFamily);
         }
     }
 
-    public function appendToJSON($transaction)
-    {
-        if ($transaction !== null) 
+    public function appendToJSON($transactionFamily)
+    { 
+        while (count($transactionFamily->getAllTransactions()) > 0) 
         {
-            $this->json[] = $transaction;
+            $transaction = $transactionFamily->buildTransactionJson();
+            if ($transaction !== null) 
+            {
+                $this->json[] = $transaction;
+            }
         }
+        
     }
 
     public function removeRows(&$sheetData, $currTransactionFamiliy)
     {
         foreach ($sheetData as $key => $row) 
         {
-            foreach ($currTransactionFamiliy->getRows() as $rowToRemove) 
+            foreach ($currTransactionFamiliy->getAllTransactions() as $rowToRemove) 
             {
                 if ($row === $rowToRemove) 
                 {
@@ -96,7 +86,7 @@ class CoinTrackingDemo
     }
 
     // get the smallest row from a group given a type of transaction and a row to ignore (in case its the pair of a trade transaction)
-    public function getLowestTransactionInGroup($sheetData, $smallestTransaction = null, $type = "Sell")
+    public function getLowestTransactionInGroup(&$sheetData, $smallestTransaction = null, $type = "Sell")
     {
         $smallestChange = PHP_INT_MAX;
         $smallestTransactionResult = null;
@@ -116,6 +106,8 @@ class CoinTrackingDemo
                 }
             }
         }
+        if ($smallestTransactionResult !== null)
+            unset($sheetData[array_search($smallestTransactionResult, $sheetData)]);
         return $smallestTransactionResult;
     }
 }
