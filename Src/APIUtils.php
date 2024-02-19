@@ -55,7 +55,7 @@ class APIUtils
         } 
         else 
         {
-            return APIUtils::handleError($data, $coin, 'fetchCoinIDCurl');
+            return APIUtils::handleError($data,  'fetchCoinIDCurl', $coin);
         }
     }
 
@@ -108,7 +108,12 @@ class APIUtils
         curl_setopt($curl, CURLOPT_TIMEOUT, 30);
         $response = curl_exec($curl);
         curl_close($curl);
-        return json_decode($response, true);
+
+        // sometimes, instead of a json response, the API returns a string with the error
+        if (strpos($response, "Throttled") !== false)
+            return ["status" => ["error_code" => 429]];
+        else
+            return json_decode($response, true);
     }
 
     // handle the error from the API request, if the error is a 429 (API limit reached) we retry the function after 10s
@@ -129,10 +134,10 @@ class APIUtils
         } 
         else 
         {
-            if (isset($data) && strtolower($data) === "throttled") 
-                return "Throttled, please try again later.";
-            else
-                return "Error unrelated with API cap, data not found.";
+            // print full curl response for debugging
+            
+            return "Error unrelated with API cap, data not found.";
+
         }
     }
 
