@@ -9,6 +9,7 @@ class APIUtils
 {
     private static $apiKey = null;
     private static $coinMap = [];
+    private static $priceMap = [];
 
     // get the (and add the api key url parameter) API key from the environment variables
     public static function getApiKey()
@@ -32,9 +33,9 @@ class APIUtils
         }
         // translate the date to the correct format
         $date = APIUtils::translateDate($date);
-
+        $today = APIUtils::dateToUnixDay(date('d-m-Y') . ' 00:00:00');
         // fetch the coin price in euro
-        return APIUtils::fetchCoinPriceInEuroCurl($coin, $date);
+        return APIUtils::fetchCoinPriceInEuroCurl($coin, $date, $today);
 
     }
 
@@ -59,19 +60,43 @@ class APIUtils
     }
 
     // fetch the coin price in euro at a specific date 
-    public static function fetchCoinPriceInEuroCurl($coin, $date)
+    public static function fetchCoinPriceInEuroCurl($coin, $date, $today)
     {
-        $url = "https://api.coingecko.com/api/v3/coins/$coin/history?date=$date&localization=false" . APIUtils::getApiKey();
+        if (isset(APIUtils::$priceMap[$coin][$date]))
+            return APIUtils::$priceMap[$coin][$date];
+            
+        $url = "https://api.coingecko.com/api/v3/coins/$coin/market_chart/range?vs_currency=eur&from=0&to=$today" . APIUtils::getApiKey();
         $data = APIUtils::makeCurlRequest($url);
-
-        if (isset($data['market_data']['current_price']['eur'])) 
+        if (isset($data['prices'])) 
         {
-            return $data['market_data']['current_price']['eur'];
+            $priceAtDate = "Price not found at this date.";
+            // save to map all the prices for the coin
+            foreach ($data['prices'] as $price) 
+            {
+                APIUtils::$priceMap[$coin][$price[0]] = $price[1];
+                if ($price[0] == $date)
+                    $priceAtDate = $price[1];
+            }
+            return $priceAtDate;
         } 
         else 
         {
-            return APIUtils::handleError($data, 'fetchCoinPriceInEuroCurl', $coin, $date);
+            return APIUtils::handleError($data, 'fetchCoinPriceInEuroCurl', $coin, $date, $today);
         }
+    }
+
+    public static function dateToUnixDay($date)
+    {
+        // returns the date in unix time but at the beggining of the day
+        return strtotime(date('d-m-Y', strtotime($date)));
+    }
+
+    public static function fetchCoinPriceInEuroCache($coin, $date)
+    {
+        if (isset(APIUtils::$priceMap[$coin][$date]))
+            return APIUtils::$priceMap[$coin][$date];
+        else
+            return APIUtils::fetchCoinPriceInEuro($coin, $date);
     }
 
     // make a curl request to the given url, used for all the API requests
@@ -104,14 +129,21 @@ class APIUtils
         } 
         else 
         {
-            return "Unknown error, data not found.";
+            if (isset($data) && strtolower($data) === "throttled") 
+                return "Throttled, please try again later.";
+            else
+                return "Error unrelated with API cap, data not found.";
         }
     }
 
-    // translate the date to unix time
+    // translate the date to unix time, considering the date is in UTC for this endpoint
     public static function translateDate($date)
     {
-        return date('d-m-Y', strtotime($date));
+        $dt = new DateTime($date, new DateTimeZone('UTC'));
+        $dt->setTime(0, 0, 0);
+        return $dt->getTimestamp()*1000;
     }
+
+
     
 }

@@ -34,9 +34,6 @@ php CoinTrackingDemo.php Data\sample.xls
 - A group does not have trades with more than 2 different coins;
 
 ## Thoughts
-- I just noticed there is an endpoint in the CoinGecko API that returns the price of a coin for its entire history:
-    - This would be a better approach to get the price of a coin at a specific time, since once a coin is fetched, the program should cache its entire history and not need to fetch it again unless the date is not in the cache (meaning the specific date is recent);
-    - I will implement this monday morning;
 - May be worth considering refactoring the processGroup() algorithm:
     - It is a bit hacky;
     - The implementation of a Builder pattern for the creation of a transactionFamiliy may be a good idea for this purpose;
